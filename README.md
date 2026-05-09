@@ -1,4 +1,4 @@
-# Explainable Pneumonia Detection Under Computational Constraints
+<!-- # Explainable Pneumonia Detection Under Computational Constraints
 
 A benchmarking study of CNN architectures for pneumonia detection from chest X-rays, with a focus on balancing classification accuracy, computational efficiency, and clinical interpretability.
 
@@ -216,4 +216,296 @@ Grad-CAM (Gradient-weighted Class Activation Mapping) is applied to all trained 
 
 ## License
 
-MIT
+MIT -->
+
+
+# Explainable Pneumonia Detection Under Computational Constraints
+
+A benchmarking study of CNN architectures for pneumonia detection from chest X-rays, with a focus on balancing classification accuracy, computational efficiency, and clinical interpretability.
+
+---
+
+## Motivation
+
+Pneumonia remains one of the leading causes of mortality worldwide, disproportionately affecting low-income regions where access to trained radiologists and high-end diagnostic infrastructure is severely limited.
+
+While deep learning models have demonstrated remarkable accuracy in detecting pneumonia from chest X-rays, their practical deployment in resource-constrained clinical environments is hindered by two critical challenges: **computational cost** and **lack of interpretability**.
+
+This project addresses both. We benchmark four CNN architectures — including **LightCXR**, a custom lightweight architecture designed explicitly for edge deployment — against pretrained baselines and integrate Grad-CAM explainability to make model predictions clinically interpretable.
+
+---
+
+## Results Summary
+
+| Model | AUC-ROC | Recall | Specificity | Params | CPU Inference |
+|---|---|---|---|---|---|
+| **LightCXR (ours)** | 0.9467 | 98.7% | 59.8% | **270K** | **2.96ms** |
+| MobileNetV2 | 0.9622 | 99.5% | 67.1% | 2.2M | 24.24ms |
+| EfficientNet-B0 | 0.9584 | 99.7% | 56.4% | 4.0M | 32.85ms |
+| ResNet-18 | 0.9663 | 99.7% | 58.6% | 11.2M | 19.28ms |
+
+### Key Finding
+
+LightCXR achieves **0.9467 AUC-ROC** with only **270K parameters**, making it approximately **6.5× faster on CPU** than the next fastest model (ResNet-18) while maintaining competitive diagnostic performance.
+
+For deployment under strict computational constraints, this tradeoff is highly compelling.
+
+---
+
+## Project Structure
+
+```text
+pneumonia-xai/
+│
+├── data/
+│   ├── raw/                              # Original Kermany Chest X-Ray dataset
+│   │   ├── train/
+│   │   │   ├── NORMAL/
+│   │   │   └── PNEUMONIA/
+│   │   ├── val/
+│   │   │   ├── NORMAL/
+│   │   │   └── PNEUMONIA/
+│   │   └── test/
+│   │       ├── NORMAL/
+│   │       └── PNEUMONIA/
+│   │
+│   ├── processed/                        # Preprocessed data (optional)
+│   └── metadata/                         # Dataset statistics and metadata
+│
+├── src/
+│   ├── data/
+│   │   ├── dataset.py                    # PyTorch Dataset implementation
+│   │   ├── transforms.py                 # Data augmentation pipelines
+│   │   └── splitter.py                   # DataLoader factory + train/val split
+│   │
+│   ├── models/
+│   │   ├── base.py                       # Abstract base model interface
+│   │   ├── custom_cnn.py                 # LightCXR architecture
+│   │   ├── resnet.py                     # ResNet-18 wrapper
+│   │   ├── mobilenet.py                  # MobileNetV2 wrapper
+│   │   └── efficientnet.py               # EfficientNet-B0 wrapper
+│   │
+│   ├── training/
+│   │   └── trainer.py                    # Training loop + early stopping
+│   │
+│   ├── evaluation/
+│   │   ├── metrics.py                    # Accuracy, F1, AUC-ROC, specificity
+│   │   └── benchmark.py                  # FLOPs, params, inference timing
+│   │
+│   └── xai/
+│       └── gradcam.py                    # Grad-CAM implementation
+│
+├── experiments/
+│   └── results/
+│       ├── lightcxr/
+│       ├── mobilenetv2/
+│       ├── efficientnet_b0/
+│       ├── resnet18/
+│       └── results_summary.csv
+│
+├── notebooks/
+│   └── analysis.ipynb                    # Analysis and visualization notebook
+│
+├── paper/                                # Manuscript draft
+├── tests/
+├── run_experiment.py                     # Main experiment runner
+├── pyproject.toml
+└── README.md
+```
+
+---
+
+## Setup
+
+### Prerequisites
+
+- Python 3.11+
+- Poetry
+- CUDA-capable GPU recommended (CPU training supported but significantly slower)
+
+### Installation
+
+```bash
+git clone https://github.com/oladimeji-balogun/pneumonia-xai.git
+cd pneumonia-xai
+poetry install
+```
+
+---
+
+## Dataset
+
+This project uses the Kaggle Chest X-Ray Images (Pneumonia) dataset.
+
+Download the dataset and place it under `data/raw/` using the following structure:
+
+```text
+data/raw/
+├── train/
+│   ├── NORMAL/
+│   └── PNEUMONIA/
+│
+├── val/
+│   ├── NORMAL/
+│   └── PNEUMONIA/
+│
+└── test/
+    ├── NORMAL/
+    └── PNEUMONIA/
+```
+
+Dataset source:
+
+- Kaggle: https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
+
+> **Note:**  
+> The original validation split provided by the dataset contains only 16 images and is therefore discarded.  
+> A reproducible 80/20 validation split is instead created dynamically from the training set during runtime.
+
+---
+
+## Running Experiments
+
+Each architecture is trained, evaluated, benchmarked, and interpreted independently.
+
+### Train a model
+
+```bash
+poetry run python run_experiment.py --model lightcxr
+```
+
+### Available models
+
+```bash
+poetry run python run_experiment.py --model mobilenetv2
+poetry run python run_experiment.py --model efficientnet_b0
+poetry run python run_experiment.py --model resnet18
+```
+
+---
+
+## Experiment Outputs
+
+Each experiment saves outputs under:
+
+```text
+experiments/results/<model_name>/
+```
+
+| File | Description |
+|---|---|
+| `<model>_metrics.json` | Classification metrics on the test set |
+| `<model>_benchmark.json` | FLOPs, parameter count, inference latency |
+| `<model>_history.json` | Per-epoch training history |
+| `<model>_gradcam.png` | Grad-CAM visualization |
+| `results_summary.csv` | Consolidated benchmark results |
+
+> Model checkpoints (`*.pth`) are intentionally excluded from version control due to GitHub file size limits.
+
+---
+
+## Analysis
+
+After completing all experiments, launch the notebook to reproduce figures and analyses:
+
+```bash
+poetry run jupyter notebook notebooks/analysis.ipynb
+```
+
+### Figures Generated
+
+- Accuracy–efficiency tradeoff plot
+- AUC-ROC vs parameter count comparison
+- Classification metrics comparison
+- CPU/GPU inference latency comparison
+- Confusion matrix grid
+- Training curves
+- Grad-CAM visualizations
+
+---
+
+## LightCXR Architecture
+
+LightCXR is a custom lightweight CNN designed specifically for deployment in computationally constrained environments.
+
+The model operates under a strict **<500K parameter budget** and leverages **depthwise separable convolutions** to dramatically reduce parameter count and FLOPs while maintaining strong representational capacity.
+
+### Architecture Overview
+
+```text
+Stem Conv       (3 → 32,  stride=2)     → 112×112
+DS Block        (32 → 64,  stride=2)    → 56×56
+DS Block        (64 → 128, stride=2)    → 28×28
+DS Block        (128 → 128)             → 28×28
+DS Block        (128 → 256, stride=2)   → 14×14
+DS Block        (256 → 256)             → 14×14
+DS Block        (256 → 512, stride=2)   → 7×7
+
+Global Average Pooling                  → 512
+Classifier      (512 → 2)
+
+-----------------------------------------------------
+
+Total Parameters : 270,146
+FLOPs            : 130.5M
+CPU Inference    : 2.96ms
+```
+
+---
+
+## Explainability
+
+Grad-CAM (Gradient-weighted Class Activation Mapping) is applied to all trained models to generate visual explanations highlighting regions of the chest X-ray most influential for prediction.
+
+Interpretability is essential in clinical AI systems. A diagnostically useful model should attend to anatomically plausible regions — such as lung fields and consolidation zones — rather than relying on spurious correlations.
+
+This project therefore evaluates not only predictive performance but also interpretability quality.
+
+---
+
+## Training Details
+
+| Setting | Value |
+|---|---|
+| Optimizer | Adam |
+| Initial Learning Rate | 1e-3 |
+| LR Scheduler | ReduceLROnPlateau |
+| LR Decay Factor | 0.5 |
+| Scheduler Patience | 3 |
+| Early Stopping Patience | 5 |
+| Maximum Epochs | 30 |
+| Batch Size | 32 |
+| Input Resolution | 224×224 |
+| Loss Function | Weighted Cross-Entropy |
+| Validation Split | 80/20 from training set |
+| Random Seed | 42 |
+| Augmentations | Horizontal flip, rotation, brightness/contrast jitter |
+
+---
+
+## Contributions
+
+- Comprehensive benchmark of four CNN architectures for pneumonia detection under computational constraints
+- Development of **LightCXR**, a lightweight CNN achieving strong diagnostic performance with only 270K parameters
+- Integration of Grad-CAM explainability across all architectures
+- Reproducible training and evaluation pipeline with fixed seeds and standardized benchmarking
+- Joint evaluation of classification performance, efficiency, and interpretability
+
+---
+
+## Citation
+
+```bibtex
+@misc{pneumonia2025pneumoniaxai,
+  authors = {Oladimeji and Emmanuel, Faithfullness},
+  title = {Explainable Pneumonia Detection Under Computational Constraints},
+  year = {2025},
+  note = {Manuscript in preparation}
+}
+```
+
+---
+
+## License
+
+This project is licensed under the MIT License.

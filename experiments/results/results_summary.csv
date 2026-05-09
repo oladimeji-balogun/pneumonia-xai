@@ -1,0 +1,2 @@
+model,accuracy,f1,auc_roc,precision,recall,specificity,tp,tn,fp,fn,trainable_params,flops,gpu_mean_ms,cpu_mean_ms
+lightcxr,0.8413,0.8861,0.9467,0.8038,0.9872,0.5983,385,140,94,5,270146,130534912,1.158,2.958

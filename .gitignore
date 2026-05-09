@@ -219,3 +219,6 @@ __marimo__/
 
 
 /data
+*.pth
+*.pth
+experiments/results/

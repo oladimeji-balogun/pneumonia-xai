@@ -433,16 +433,16 @@ The model operates under a strict **<500K parameter budget** and leverages **dep
 ### Architecture Overview
 
 ```text
-Stem Conv       (3 → 32,  stride=2)     → 112×112
-DS Block        (32 → 64,  stride=2)    → 56×56
-DS Block        (64 → 128, stride=2)    → 28×28
-DS Block        (128 → 128)             → 28×28
-DS Block        (128 → 256, stride=2)   → 14×14
-DS Block        (256 → 256)             → 14×14
-DS Block        (256 → 512, stride=2)   → 7×7
+Stem Conv       (3 -> 32,  stride=2)     -> 112×112
+DS Block        (32 -> 64,  stride=2)    -> 56×56
+DS Block        (64 -> 128, stride=2)    -> 28×28
+DS Block        (128 -> 128)             -> 28×28
+DS Block        (128 -> 256, stride=2)   -> 14×14
+DS Block        (256 -> 256)             -> 14×14
+DS Block        (256 -> 512, stride=2)   -> 7×7
 
-Global Average Pooling                  → 512
-Classifier      (512 → 2)
+Global Average Pooling                  -> 512
+Classifier      (512 -> 2)
 
 -----------------------------------------------------
 
@@ -495,12 +495,12 @@ This project therefore evaluates not only predictive performance but also interp
 
 ## Citation
 
-```bibtex
-@misc{pneumonia2025pneumoniaxai,
-  authors = {Oladimeji and Emmanuel, Faithfullness},
-  title = {Explainable Pneumonia Detection Under Computational Constraints},
-  year = {2025},
-  note = {Manuscript in preparation}
+```json
+{
+  "authors": ["Oladimeji Balogun", "Emmanuel Omotozaiye", "Faithfullness Alabi"],
+  "title": "Explainable Pneumonia Detection Under Computational Constraints"
+  "year": "2025",
+  "note": "Manuscript in preparation"
 }
 ```
 
